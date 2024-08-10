@@ -127,7 +127,7 @@ func (rmq *RabbitMQService) handlePostMessage(postMessage *RabbitMQPostMessage) 
       if err != nil {
           panic(err.Error())
       }
-      msg := []byte(fmt.Sprintf("%s Has posted a new post! go check it out", username))
+      msg := []byte(fmt.Sprintf("%s has posted a new post on Tunes! go check it out", username))
       err = rmq.EmailService.SendEmail(emails, msg)
       if err != nil {
           panic(err.Error())
