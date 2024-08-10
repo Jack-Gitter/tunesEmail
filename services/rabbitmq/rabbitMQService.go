@@ -60,8 +60,12 @@ func(rmq *RabbitMQService) Read() error {
           if err != nil {
               fmt.Println(err.Error())
           }
-          fmt.Println(emails)
-          err = rmq.EmailService.SendEmail(emails, []byte("test!"))
+          username, err := rmq.UserService.GetUsername(postMessage.Poster)
+          if err != nil {
+              fmt.Println(err.Error())
+          }
+          msg := fmt.Sprintf("%s Has posted a new post! go check it out", username)
+          err = rmq.EmailService.SendEmail(emails, []byte(msg))
           if err != nil {
               fmt.Println(err.Error())
           }
