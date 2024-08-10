@@ -33,51 +33,6 @@ type IRabbitMQService interface {
     Connect() 
     Read()
 }
-
-func(rmq *RabbitMQService) Read() error {
-
-    msgs, err := rmq.Chan.Consume(
-      rmq.QName,
-      "",     
-      true,   
-      false,  
-      false, 
-      false,  
-      nil,   
-    )
-
-    if err != nil {
-        return err
-    }
-
-    var forever chan struct{}
-
-    go func() {
-      for d := range msgs {
-          postMessage := &RabbitMQPostMessage{}
-          json.Unmarshal(d.Body, postMessage)
-          emails, err := rmq.UserService.GetUserFollowerEmails(postMessage.Poster)
-          if err != nil {
-              fmt.Println(err.Error())
-          }
-          username, err := rmq.UserService.GetUsername(postMessage.Poster)
-          if err != nil {
-              fmt.Println(err.Error())
-          }
-          msg := fmt.Sprintf("%s Has posted a new post! go check it out", username)
-          err = rmq.EmailService.SendEmail(emails, []byte(msg))
-          if err != nil {
-              fmt.Println(err.Error())
-          }
-      }
-    }()
-
-    fmt.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-    <-forever
-
-    return nil
-}
-
 func(rmq *RabbitMQService) Connect() {
     connectionString := os.Getenv("RABBIT_MQ_CONNECTION_STRING")
 
@@ -108,3 +63,50 @@ func(rmq *RabbitMQService) Connect() {
     )
 }
 
+
+func(rmq *RabbitMQService) Read() error {
+
+    msgs, err := rmq.Chan.Consume(
+      rmq.QName,
+      "",     
+      true,   
+      false,  
+      false, 
+      false,  
+      nil,   
+    )
+
+    if err != nil {
+        return err
+    }
+
+    var forever chan struct{}
+
+    go rmq.readFunc(msgs)
+
+    fmt.Printf("Waiting for messages...")
+    <-forever
+
+    return nil
+}
+
+
+func (rmq *RabbitMQService) readFunc(msgs <-chan amqp091.Delivery) {
+      for d := range msgs {
+          postMessage := &RabbitMQPostMessage{}
+          json.Unmarshal(d.Body, postMessage)
+          emails, err := rmq.UserService.GetUserFollowerEmails(postMessage.Poster)
+          if err != nil {
+              fmt.Println(err.Error())
+          }
+          username, err := rmq.UserService.GetUsername(postMessage.Poster)
+          if err != nil {
+              fmt.Println(err.Error())
+          }
+          msg := fmt.Sprintf("%s Has posted a new post! go check it out", username)
+          err = rmq.EmailService.SendEmail(emails, []byte(msg))
+          if err != nil {
+              fmt.Println(err.Error())
+          }
+      }
+}
