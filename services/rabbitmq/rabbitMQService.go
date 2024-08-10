@@ -1,10 +1,12 @@
 package rabbitmq
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/Jack-Gitter/tunesEmailService/services/db/user"
+	"github.com/Jack-Gitter/tunesEmailService/services/email"
 	"github.com/rabbitmq/amqp091-go"
 )
 
@@ -24,6 +26,7 @@ type RabbitMQService struct {
     Chan *amqp091.Channel
     QName string
     UserService user.IUserService
+    EmailService email.IEmailService
 }
 
 type IRabbitMQService interface {
@@ -51,7 +54,17 @@ func(rmq *RabbitMQService) Read() error {
 
     go func() {
       for d := range msgs {
-        fmt.Printf("Received a message: %s", d.Body)
+          postMessage := &RabbitMQPostMessage{}
+          json.Unmarshal(d.Body, postMessage)
+          emails, err := rmq.UserService.GetUserFollowerEmails(postMessage.Poster)
+          if err != nil {
+              fmt.Println(err.Error())
+          }
+          fmt.Println(emails)
+          err = rmq.EmailService.SendEmail(emails, []byte("test!"))
+          if err != nil {
+              fmt.Println(err.Error())
+          }
       }
     }()
 

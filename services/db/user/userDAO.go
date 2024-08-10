@@ -19,7 +19,7 @@ func(u *UserDAO) GetUserFollowerEmails(executor general.QueryExecutor, spotifyID
                 FROM followers 
                 INNER JOIN  users 
                 ON users.spotifyid = followers.follower 
-                WHERE followers.userfollowed = $1 AND users.email <> NULL`
+                WHERE followers.userfollowed = $1`
 
     rows, err := executor.Query(query, spotifyID)
 

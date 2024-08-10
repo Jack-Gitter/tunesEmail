@@ -19,9 +19,6 @@ func ConnectToDB() *sql.DB {
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 
-    fmt.Println(dbHost)
-    fmt.Println(dbPort)
-
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 
