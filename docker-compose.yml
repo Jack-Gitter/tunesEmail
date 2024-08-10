@@ -1,0 +1,5 @@
+services:
+  tunesemailservice:
+    build:
+      dockerfile: Dockerfile
+    profiles: [tunesemailservice]
