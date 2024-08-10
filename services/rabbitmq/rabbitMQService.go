@@ -88,8 +88,6 @@ func(rmq *RabbitMQService) Read() error {
     var forever chan struct{}
 
     go rmq.readFunc(msgs)
-
-    fmt.Printf("Waiting for messages...")
     <-forever
 
     return nil
