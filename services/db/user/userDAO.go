@@ -15,7 +15,7 @@ type IUserDAO interface {
 
 func(u *UserDAO) GetUsername(executor general.QueryExecutor, spotifyID string) (string, error) {
 
-    query := ` SELECT users.username FROM users WHERE user.spotifyid = $1`
+    query := ` SELECT users.username FROM users WHERE users.spotifyid = $1`
 
     row := executor.QueryRow(query, spotifyID)
 
