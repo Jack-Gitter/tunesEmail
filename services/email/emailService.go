@@ -1,7 +1,6 @@
 package email
 
 import (
-	"fmt"
 	"net/smtp"
 	"os"
 )
@@ -17,7 +16,6 @@ type IEmailService interface {
 }
 
 func(e *EmailService) Authenticate() {
-
     email := os.Getenv("SENDER_EMAIL")
     pass := os.Getenv("SENDER_EMAIL_PASS")
     e.Sender = email
@@ -25,13 +23,5 @@ func(e *EmailService) Authenticate() {
 }
 
 func(e *EmailService) SendEmail(to []string, message []byte) error {
-  err := smtp.SendMail("smtp.gmail.com:587", e.AuthInfo, e.Sender, to, message)
-  if err != nil {
-    fmt.Println(err.Error())
-  }
-  return err
-}
-
-func main() {
-
+  return smtp.SendMail("smtp.gmail.com:587", e.AuthInfo, e.Sender, to, message)
 }

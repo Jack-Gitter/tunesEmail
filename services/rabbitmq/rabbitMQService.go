@@ -16,10 +16,15 @@ const (
 	POST QueueMessageType = "POST"
 )
 
-type RabbitMQPostMessage struct {
+type RabbitMQMessage struct {
     Type QueueMessageType
+}
+
+type RabbitMQPostMessage struct {
+    RabbitMQMessage
     Poster string
 }
+
 
 type RabbitMQService struct {
     Conn *amqp091.Connection
@@ -93,20 +98,40 @@ func(rmq *RabbitMQService) Read() error {
 
 func (rmq *RabbitMQService) readFunc(msgs <-chan amqp091.Delivery) {
       for d := range msgs {
-          postMessage := &RabbitMQPostMessage{}
-          json.Unmarshal(d.Body, postMessage)
-          emails, err := rmq.UserService.GetUserFollowerEmails(postMessage.Poster)
+          t, err := rmq.getMessageType(d)
           if err != nil {
-              fmt.Println(err.Error())
+             continue
           }
-          username, err := rmq.UserService.GetUsername(postMessage.Poster)
-          if err != nil {
-              fmt.Println(err.Error())
+          switch t {
+            case POST:
+              postMessage := &RabbitMQPostMessage{}
+              json.Unmarshal(d.Body, postMessage)
+              rmq.handlePostMessage(postMessage)
           }
-          msg := fmt.Sprintf("%s Has posted a new post! go check it out", username)
-          err = rmq.EmailService.SendEmail(emails, []byte(msg))
-          if err != nil {
-              fmt.Println(err.Error())
-          }
+      }
+}
+
+func(rmq *RabbitMQService) getMessageType(d amqp091.Delivery) (QueueMessageType, error) {
+    message := &RabbitMQMessage{}
+    err := json.Unmarshal(d.Body, message)
+    if err != nil {
+        return "", err
+    }
+    return message.Type, nil
+}
+
+func (rmq *RabbitMQService) handlePostMessage(postMessage *RabbitMQPostMessage) {
+      emails, err := rmq.UserService.GetUserFollowerEmails(postMessage.Poster)
+      if err != nil {
+          panic(err.Error())
+      }
+      username, err := rmq.UserService.GetUsername(postMessage.Poster)
+      if err != nil {
+          panic(err.Error())
+      }
+      msg := []byte(fmt.Sprintf("%s Has posted a new post! go check it out", username))
+      err = rmq.EmailService.SendEmail(emails, msg)
+      if err != nil {
+          panic(err.Error())
       }
 }
