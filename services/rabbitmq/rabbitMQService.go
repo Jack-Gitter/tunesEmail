@@ -3,8 +3,8 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
-
 	"github.com/Jack-Gitter/tunesEmailService/services/db/user"
 	"github.com/Jack-Gitter/tunesEmailService/services/email"
 	"github.com/rabbitmq/amqp091-go"
@@ -121,15 +121,15 @@ func(rmq *RabbitMQService) getMessageType(d amqp091.Delivery) (QueueMessageType,
 func (rmq *RabbitMQService) handlePostMessage(postMessage *RabbitMQPostMessage) {
       emails, err := rmq.UserService.GetUserFollowerEmails(postMessage.Poster)
       if err != nil {
-          panic(err.Error())
+          slog.Warn("Emails for the users followers could not be fetched, check the health of the database!")
       }
       username, err := rmq.UserService.GetUsername(postMessage.Poster)
       if err != nil {
-          panic(err.Error())
+          slog.Warn("Username could not be fetched from database, check the health of the database!")
       }
       msg := []byte(fmt.Sprintf("%s has posted a new post on Tunes! go check it out", username))
       err = rmq.EmailService.SendEmail(emails, msg)
       if err != nil {
-          panic(err.Error())
+          slog.Warn("Error sending out some of the emails, check on the SMTP connection!")
       }
 }

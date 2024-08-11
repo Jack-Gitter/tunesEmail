@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-     err := godotenv.Load()
-      if err != nil {
-          panic("bad")
-      }
+    err := godotenv.Load()
+    if err != nil {
+        panic("bad")
+    }
 
     emailService := &email.EmailService{}
     emailService.Authenticate()
@@ -20,9 +20,9 @@ func main() {
     userDao := &user.UserDAO{}
     userService := user.UserService{DB: conn, UserDAO: userDao}
     rabbitMQService := rabbitmq.RabbitMQService{}
-    rabbitMQService.Connect()
     rabbitMQService.UserService = &userService
     rabbitMQService.EmailService = emailService
+    rabbitMQService.Connect()
     rabbitMQService.Read()
 
 
